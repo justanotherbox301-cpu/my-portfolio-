@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER | SF Editz Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #000000;
+            --accent: #ffffff;
+            --muted: #555555;
+            --border: rgba(255, 255, 255, 0.05);
+            --ease: cubic-bezier(0.19, 1, 0.22, 1);
+            --green: #00ffa3; 
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: var(--accent); overflow-x: hidden; height: 100vh; }
+
+        /* --- INTRO GATE --- */
+        #gate-overlay {
+            position: fixed; inset: 0; background: #000; z-index: 10000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.8s var(--ease);
+        }
+        .intro-branding {
+            font-size: 0.7rem; letter-spacing: 12px; color: #fff;
+            text-transform: uppercase; margin-bottom: 40px;
+            opacity: 0; transform: scale(0.9); filter: blur(10px);
+            animation: fadeIn 1.5s var(--ease) forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; transform: scale(1); filter: blur(0); } }
+
+        .input-zone { opacity: 0; transition: 0.8s var(--ease); transform: translateY(20px); pointer-events: none; text-align: center; }
+        .input-zone.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .name-input {
+            background: transparent; border: none; border-bottom: 1px solid var(--border);
+            color: #fff; padding: 10px; width: 280px; text-align: center;
+            font-size: 0.9rem; letter-spacing: 5px; transition: 0.4s;
+            text-transform: uppercase; margin-bottom: 40px;
+        }
+        .name-input:focus { border-bottom-color: var(--green); outline: none; }
+
+        .init-btn {
+            background: #fff; color: #000; border: none;
+            padding: 12px 45px; font-size: 0.65rem; letter-spacing: 5px;
+            font-weight: 600; cursor: pointer; transition: 0.4s var(--ease); text-transform: uppercase;
+        }
+        .init-btn:hover { letter-spacing: 8px; background: var(--green); }
+
+        /* --- WELCOME SCREEN --- */
+        #welcome-screen {
+            position: fixed; inset: 0; background: #000; z-index: 11000;
+            display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+        }
+        .welcome-text {
+            font-size: clamp(1.2rem, 4vw, 3rem); font-weight: 200; letter-spacing: 6px;
+            color: #fff; text-transform: uppercase;
+            animation: expandFade 4s var(--ease) forwards;
+        }
+        @keyframes expandFade {
+            0% { opacity: 0; transform: scale(0.85); filter: blur(10px); }
+            40% { opacity: 1; transform: scale(1); filter: blur(0); }
+            80% { opacity: 1; transform: scale(1.05); filter: blur(0); }
+            100% { opacity: 0; transform: scale(1.15); filter: blur(20px); }
+        }
+
+        /* --- CONTACT MODAL --- */
+        #contact-trigger {
+            position: fixed; bottom: 30px; right: 30px; z-index: 2000;
+            background: var(--green); color: #000; border: none;
+            padding: 12px 25px; font-size: 0.65rem; font-weight: 600;
+            letter-spacing: 3px; cursor: pointer; border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 255, 163, 0.2);
+            transition: 0.5s var(--ease); text-transform: uppercase;
+            animation: float 3s ease-in-out infinite; display: none;
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        #contact-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+            z-index: 15000; display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(0px); opacity: 0; transition: 0.6s var(--ease);
+        }
+        #contact-modal.active { display: flex; opacity: 1; backdrop-filter: blur(20px); }
+
+        .contact-card {
+            background: #0a0a0a; border: 1px solid var(--border);
+            padding: 40px; width: 95%; max-width: 400px; text-align: center;
+            transform: translateY(40px) scale(0.95); opacity: 0;
+            transition: 0.8s var(--ease);
+        }
+        #contact-modal.active .contact-card { transform: translateY(0) scale(1); opacity: 1; }
+
+        .contact-input {
+            width: 100%; background: transparent; border: none;
+            border-bottom: 1px solid var(--border); color: #fff;
+            padding: 15px; margin-bottom: 25px; font-size: 0.75rem;
+            letter-spacing: 2px; outline: none; transition: 0.4s;
+        }
+        .contact-input:focus { border-bottom-color: var(--green); background: rgba(255,255,255,0.02); }
+        textarea.contact-input { height: 80px; resize: none; }
+
+        .send-btn {
+            background: #fff; color: #000; border: none; width: 100%;
+            padding: 15px; font-size: 0.65rem; letter-spacing: 4px;
+            font-weight: 600; cursor: pointer; transition: 0.4s; text-transform: uppercase;
+        }
+        .send-btn:hover { background: var(--green); letter-spacing: 6px; }
+
+        /* --- SOPHIA AI --- */
+        #sophia-trigger {
+            position: fixed; bottom: 30px; left: 30px; z-index: 2000;
+            background: #fff; color: #000; border: none;
+            width: 50px; height: 50px; border-radius: 50%;
+            font-size: 1.2rem; cursor: pointer; display: none;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+            transition: 0.5s var(--ease);
+        }
+
+        /* --- HEADER --- */
+        #header-main {
+            position: fixed; top: 0; width: 100%; z-index: 999;
+            transform: translateY(-100%); transition: 1.2s var(--ease);
+            background: rgba(0,0,0,0.95); border-bottom: 1px solid var(--border);
+        }
+        .nav-container { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; max-width: 1400px; margin: 0 auto; }
+        .brand { font-size: 0.75rem; letter-spacing: 5px; font-weight: 600; }
+        .nav-links { display: flex; gap: 25px; }
+        .nav-item { color: var(--muted); font-size: 0.65rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; }
+        .nav-item:hover, .nav-item.active { color: #fff; }
+
+        /* --- MAIN UI --- */
+        main { height: 100vh; overflow-y: auto; padding: 100px 5% 50px; opacity: 0; transition: 1.5s var(--ease); display: flex; flex-direction: column; align-items: center; }
+        .section { display: none; width: 100%; max-width: 1000px; opacity: 0; }
+        .section.active { display: block; opacity: 1; }
+
+        .hero-block { padding: 40px 20px; text-align: center; }
+        .hero-title { font-size: clamp(2.5rem, 9vw, 5rem); font-weight: 800; line-height: 1.1; margin-bottom: 25px; letter-spacing: -2px; color: #fff; }
+        .hero-subtitle { color: #999; font-size: 0.9rem; max-width: 520px; margin: 0 auto; line-height: 1.6; letter-spacing: 0.5px; }
+
+        /* --- MICRO-ANIMATIONS PRICING --- */
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 50px; width: 100%; }
+        .plan-card {
+            background: #080808; border: 1px solid var(--border); padding: 40px 30px; border-radius: 4px;
+            cursor: pointer; transition: 0.5s var(--ease); position: relative; overflow: hidden;
+            opacity: 0; transform: translateY(20px);
+        }
+        .pricing-grid.reveal .plan-card { opacity: 1; transform: translateY(0); }
+        .pricing-grid.reveal .plan-card:nth-child(1) { transition-delay: 0.1s; }
+        .pricing-grid.reveal .plan-card:nth-child(2) { transition-delay: 0.2s; }
+        .pricing-grid.reveal .plan-card:nth-child(3) { transition-delay: 0.3s; }
+
+        .plan-card:hover { border-color: var(--green); background: #0c0c0c; transform: translateY(-5px); }
+        .plan-card.active { border-color: var(--green); background: #0c0c0c; }
+        .plan-tag { color: var(--green); font-size: 0.5rem; letter-spacing: 4px; font-weight: 800; display: block; margin-bottom: 15px; }
+        .plan-name { font-size: 2rem; font-weight: 800; margin-bottom: 5px; color: #fff; }
+        .plan-price { font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 25px; transition: 0.3s; }
+        .plan-card:hover .plan-price { transform: scale(1.05); color: var(--green); }
+
+        .specs-drawer { max-height: 0; opacity: 0; overflow: hidden; transition: 0.8s var(--ease); }
+        .plan-card.active .specs-drawer { max-height: 500px; opacity: 1; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; }
+        .spec-item { font-size: 0.75rem; color: #888; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: space-between; }
+        .spec-item b { color: var(--green); font-weight: 400; }
+
+        /* --- ORIGINAL STUDIO GRID --- */
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); border-top: 1px solid var(--border); margin-top: 50px; width: 100%; }
+        .info-box { padding: 50px 40px; border-right: 1px solid var(--border); transition: 0.5s var(--ease); }
+        .info-box:hover { background: rgba(255,255,255,0.02); transform: translateY(-8px); border-bottom: 1px solid var(--green); }
+        .box-num { color: var(--green); font-size: 0.6rem; font-weight: 800; display: block; margin-bottom: 15px; }
+        .info-box h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 12px; letter-spacing: 2px; }
+        .info-box p { font-size: 0.75rem; color: #777; line-height: 1.8; }
+
+        .anim-reveal { opacity: 0; transform: translateY(20px); animation: revealUp 1s var(--ease) forwards; }
+        @keyframes revealUp { to { opacity: 1; transform: translateY(0); } }
+/* Stack Grid Layout */
+.stack-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    border-top: 1px solid var(--border); 
+    margin-top: 50px; 
+    background: #000; 
+}
+
+/* Individual Box Styling */
+.stack-box { 
+    padding: 40px; 
+    border-right: 1px solid var(--border); 
+    border-bottom: 1px solid var(--border); 
+    transition: 0.5s var(--ease); 
+}
+
+.stack-box:hover { 
+    background: rgba(0, 255, 163, 0.03); 
+    transform: translateY(-8px); 
+    border-bottom-color: var(--green); 
+}
+
+.stack-box h3 { font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 12px; color: #fff; }
+.stack-box p { font-size: 0.7rem; color: #666; line-height: 1.8; }
+
+/* Reveal Animation Trigger */
+.section.active .anim-reveal { 
+    animation: revealUp 1s var(--ease) forwards; 
+}
+
+@keyframes revealUp { 
+    from { opacity: 0; transform: translateY(30px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+  
+    </style>
+</head>
+<body>
+
+    <audio id="click-sfx" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" type="audio/mpeg"></audio>
+    <audio id="lofi-player" loop preload="auto"><source src="https://stream.zeno.fm/0r0xa792kwzuv" type="audio/mpeg"></audio>
+
+    <div id="gate-overlay">
+        <div class="intro-branding">CREATED BY SAIF</div>
+        <div class="input-zone" id="input-ui">
+            <input type="text" id="userName" class="name-input" placeholder="ENTER IDENTITY" spellcheck="false">
+            <br>
+            <button class="init-btn" onclick="playClick(); bootSystem()">INITIALIZE</button>
+        </div>
+
+</div>
+
+    </div>
+
+    <div id="welcome-screen"><div class="welcome-text" id="welcome-display">WELCOME</div></div>
+
+    <div id="contact-modal">
+        <div class="contact-card" id="form-container">
+            <div style="font-size: 0.5rem; color: var(--green); letter-spacing: 4px; margin-bottom: 25px;">HIRE FOR PROJECTS</div>
+            <form id="contact-form" action="https://formspree.io/f/xeerowkn" method="POST">
+                <input type="email" name="email" class="contact-input" placeholder="CLIENT EMAIL" required>
+                <textarea name="message" class="contact-input" placeholder="DESCRIBE YOUR VISION..." required></textarea>
+                <button type="submit" class="send-btn" id="submit-btn">TRANSMIT</button>
+            </form>
+            <button onclick="toggleContact(false)" style="background:transparent; border:none; color:var(--muted); font-size:0.5rem; margin-top:25px; letter-spacing:2px; cursor:pointer;">CLOSE</button>
+        </div>
+    </div>
+
+
+    <header id="header-main">
+        <div class="nav-container">
+            <div class="brand">AETHER <span id="user-display" style="color:var(--muted)">// EDITOR</span></div>
+            <nav class="nav-links">
+                <div class="nav-item active" onclick="nav(this, 'home')">STUDIO</div>
+                <div class="nav-item" onclick="nav(this, 'work')">PLANS</div>
+                <div class="nav-item" onclick="nav(this, 'skills')">STACK</div>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main-ui">
+        <section id="home" class="section active">
+            <div class="hero-block anim-reveal">
+                <span class="box-num">CREATIVE_ENGINE // 2026</span>
+                <h1 class="hero-title">Visuals That <br> Dominate.</h1>
+                <p class="hero-subtitle">High-end mobile video editing specializing in CapCut and Alight Motion. Transforming raw footage into cinematic digital experiences.</p>
+            </div>
+            <div class="info-grid anim-reveal" style="animation-delay: 0.3s;">
+                <div class="info-box"><span class="box-num">01</span><h3>MOTION_GRAPHICS</h3><p>Smooth transitions and high-frame-rate animations for maximum engagement.</p></div>
+                <div class="info-box"><span class="box-num">02</span><h3>COLOR_GRADING</h3><p>Professional cinematic looks tailored for your brand's unique aesthetic.</p></div>
+                <div class="info-box"><span class="box-num">03</span><h3>VFX_ALIGHT</h3><p>Advanced visual effects and compositing directly from your mobile device.</p></div>
+            </div>
+        </section>
+
+        <section id="work" class="section">
+            <div class="hero-block">
+                <span class="box-num">PRICING // TIERS</span>
+                <h1 class="hero-title" style="color:#fff;">Service <br> Packages.</h1>
+                <div class="pricing-grid">
+                    <div class="plan-card" onclick="togglePlan(this)">
+                        <span class="plan-tag">01 // BASIC</span>
+                        <h2 class="plan-name">GOLD</h2>
+                        <div class="plan-price">$5 <span>/edit</span></div>
+                        <div class="specs-drawer">
+                            <div class="spec-item">Resolution <b>720p HD</b></div>
+                            <div class="spec-item">Color Grade <b>Standard</b></div>
+                            <div class="spec-item">Revisions <b>4 Times</b></div>
+                            <div class="spec-item">Delivery <b>48 Hours</b></div>
+                        </div>
+                    </div>
+                    <div class="plan-card" onclick="togglePlan(this)" style="border-color: rgba(0,255,163,0.3)">
+                        <span class="plan-tag">02 // PRO</span>
+                        <h2 class="plan-name">SILVER</h2>
+                        <div class="plan-price">$10 <span>/edit</span></div>
+                        <div class="specs-drawer">
+                            <div class="spec-item">Resolution <b>1080p FHD</b></div>
+                            <div class="spec-item">Vfx and Subtitles <b>Advanced</b></div>
+                            <div class="spec-item">Thumbnail <b>1 Free</b></div>
+                            <div class="spec-item">Delivery <b>48 Hours</b></div>
+                        </div>
+                    </div>
+                    <div class="plan-card" onclick="togglePlan(this)">
+                        <span class="plan-tag">03 // ELITE</span>
+                        <h2 class="plan-name">DIAMOND</h2>
+                        <div class="plan-price">$15 <span>/edit</span></div>
+                        <div class="specs-drawer">
+                            <div class="spec-item">Resolution <b>4K Ultra-HD</b></div>
+                            <div class="spec-item">Motion Graphics <b>Included</b></div>
+                            <div class="spec-item">Revisions <b>6 Times</b></div>
+                            <div class="spec-item">Delivery <b>48 Hours</b></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 60px; text-align: center; width: 100%; padding: 40px; border: 1px dashed var(--border);">
+    <p style="font-size: 0.7rem; color: #666; letter-spacing: 3px; margin-bottom: 25px; text-transform: uppercase;">FOR MORE INFORMATION</p>
+    <a href="https://www.fiverr.com/s/WEWW8Wx" target="_blank" 
+       style="display: inline-block; background: var(--green); color: #000; padding: 18px 45px; text-decoration: none; font-size: 0.65rem; font-weight: 800; letter-spacing: 5px; text-transform: uppercase; transition: 0.4s var(--ease);"
+       onmouseover="this.style.background='#fff'; this.style.transform='scale(1.05)'"
+       onmouseout="this.style.background='var(--green)'; this.style.transform='scale(1)'">
+       CONTINUE ON FIVERR
+    </a>
+</div>
+
+        </section>
+
+        <section id="skills" class="section">
+<div class="hero-block anim-reveal">
+    <span class="box-num">TOOLKIT // ACCESS</span>
+    <h1 class="hero-title">Technical <br> Arsenal.</h1>
+    <p class="hero-subtitle">Engineering high-octane visuals through advanced mobile manipulation frameworks.</p>
+</div>
+
+<div class="stack-grid">
+    <div class="stack-box anim-reveal" style="transition-delay: 0.1s;">
+        <span class="box-num">01</span>
+        <h3>ALIGHT_MOTION [XML]</h3>
+        <p>Complex keyframing, custom easing curves, and vector motion graphics.</p>
+    </div>
+    <div class="stack-box anim-reveal" style="transition-offset: 0.2s;">
+        <span class="box-num">02</span>
+        <h3>CAPCUT_PRO [VFX]</h3>
+        <p>3D space tracking, advanced masking, and optical flow velocity.</p>
+    </div>
+    <div class="stack-box anim-reveal" style="transition-delay: 0.3s;">
+        <span class="box-num">03</span>
+        <h3>COLOR_SCIENCE</h3>
+        <p>LUT integration, HDR grading, and dynamic lighting effects.</p>
+    </div>
+    <div class="stack-box anim-reveal" style="transition-delay: 0.4s;">
+        <span class="box-num">04</span>
+        <h3>NODES_VIDEO [PRO]</h3>
+        <p>Professional-grade node-based compositing and particle systems.</p>
+    </div>
+    <div class="stack-box anim-reveal" style="transition-delay: 0.5s;">
+        <span class="box-num">05</span>
+        <h3>LIGHTROOM_CC</h3>
+        <p>Precision color correction and grain management for every frame.</p>
+    </div>
+    <div class="stack-box anim-reveal" style="transition-delay: 0.6s;">
+        <span class="box-num">06</span>
+        <h3>AI_MANIPULATION</h3>
+        <p>Upscaling 1080p to 4K and AI-driven smart object removal.</p>
+    </div>
+</div>
+
+        </section>
+    </main>
+
+    <button id="contact-trigger" onclick="toggleContact(true)">CONTACT</button>
+
+    <script>
+      function bootSystem() {
+    const nameInput = document.getElementById('userName');
+    const name = nameInput ? nameInput.value.trim() : "";
+    if(!name) return;
+
+    if(lofi) { lofi.volume = 0.2; lofi.play().catch(() => {}); }
+    
+    document.getElementById('user-display').innerText = "// " + name.toUpperCase();
+    document.getElementById('welcome-display').innerText = `WELCOME ${name.toUpperCase()}`;
+    
+    const gate = document.getElementById('gate-overlay');
+    gate.style.opacity = '0';
+    
+    setTimeout(() => {
+        gate.style.display = 'none';
+        const welcome = document.getElementById('welcome-screen');
+        welcome.style.display = 'flex';
+        
+        setTimeout(() => {
+            welcome.style.opacity = '0';
+            setTimeout(() => {
+                welcome.style.display = 'none';
+                document.getElementById('header-main').style.transform = 'translateY(0)';
+                document.getElementById('main-ui').style.opacity = '1';
+                document.getElementById('contact-trigger').style.display = 'block';
+            }, 800);
+        }, 3500);
+    }, 800);
+}
+
+// Navigation fix
+function nav(el, id) {
+    playClick();
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(id === 'work') setTimeout(() => document.querySelector('.pricing-grid').classList.add('reveal'), 100);
+}
+
+// Contact Modal fix
+function toggleContact(show) {
+    playClick();
+    const modal = document.getElementById('contact-modal');
+    if(show) {
+        modal.classList.add('active');
+    } else {
+        modal.classList.remove('active');
+    }
+}
+
+// Plan Toggle fix
+function togglePlan(card) {
+    playClick();
+    document.querySelectorAll('.plan-card').forEach(c => { if(c !== card) c.classList.remove('active'); });
+    card.classList.toggle('active');
+}
+
+        const lofi = document.getElementById('lofi-player');
+        const sfx = document.getElementById('click-sfx');
+
+        function playClick() { sfx.currentTime = 0; sfx.volume = 0.2; sfx.play(); }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => { document.getElementById('input-ui').classList.add('show'); }, 1200);
+        });
+
+        function bootSystem() {
+            const name = document.getElementById('userName').value.trim();
+            if(!name) return;
+            lofi.volume = 0.2; lofi.play();
+            document.getElementById('user-display').innerText = "// " + name.toUpperCase();
+            document.getElementById('welcome-display').innerText = `WELCOME ${name.toUpperCase()}`;
+            document.getElementById('gate-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('gate-overlay').style.display = 'none';
+                document.getElementById('welcome-screen').style.display = 'flex';
+                setTimeout(() => {
+                    document.getElementById('welcome-screen').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('welcome-screen').style.display = 'none';
+                        document.getElementById('header-main').style.transform = 'translateY(0)';
+                        document.getElementById('main-ui').style.opacity = '1';
+                        document.getElementById('contact-trigger').style.display = 'block';
+                        document.getElementById('sophia-trigger').style.display = 'block';
+                        document.body.style.overflow = 'auto';
+                    }, 800);
+                }, 4000); 
+            }, 800);
+        }
+
+        function nav(el, id) {
+            playClick();
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            document.querySelectorAll('.section').forEach(s => { s.style.display = 'none'; s.classList.remove('active'); });
+            const target = document.getElementById(id);
+            if(target) {
+                target.style.display = 'block';
+                setTimeout(() => { target.classList.add('active'); }, 50);
+                if(id === 'work') {
+                    const grid = target.querySelector('.pricing-grid');
+                    if(grid) { grid.classList.remove('reveal'); void grid.offsetWidth; grid.classList.add('reveal'); }
+                }
+            }
+        }
+
+        function togglePlan(card) {
+            playClick();
+            const isActive = card.classList.contains('active');
+            document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('active'));
+            if(!isActive) card.classList.add('active');
+        }
+
+        function toggleContact(show) {
+            playClick();
+            const modal = document.getElementById('contact-modal');
+            if(show) { modal.style.display = 'flex'; setTimeout(() => modal.classList.add('active'), 20); }
+            else { modal.classList.remove('active'); setTimeout(() => { modal.style.display = 'none'; }, 600); }
+        }
+    // Form Submission Fix: Isse Formspree page nahi khulega
+document.getElementById('contact-form').addEventListener('submit', async function(e) {
+    e.preventDefault(); 
+    const btn = document.getElementById('submit-btn');
+    const originalText = btn.innerText;
+    btn.innerText = "SENDING...";
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(this.action, {
+            method: 'POST',
+            body: new FormData(this),
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (response.ok) {
+            btn.innerText = "TRANSMITTED!";
+            btn.style.background = "#00ffa3";
+            this.reset();
+            setTimeout(() => {
+                toggleContact(false); 
+                btn.innerText = originalText;
+                btn.disabled = false;
+                btn.style.background = "#fff";
+            }, 2000);
+        } else {
+            alert("Error! Please try again.");
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    } catch (error) {
+        alert("Network Error!");
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+});
+
+    </script>
+</body>
+</html>
